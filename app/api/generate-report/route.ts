@@ -1,6 +1,6 @@
 import { GoogleGenAI } from "@google/genai"
 
-const client = new GoogleGenAI(process.env.GEMINI_API_KEY || "")
+const client = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" })
 
 export async function POST(req: Request) {
   const { activities, blockers, tomorrowPlan, date } = await req.json()

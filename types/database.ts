@@ -7,7 +7,7 @@ export interface Database {
         Row: {
           id: string
           username: string
-          pin: string
+          pin: string | null
           full_name: string | null
           role: string
           is_admin: boolean
@@ -18,7 +18,7 @@ export interface Database {
         Insert: {
           id?: string
           username: string
-          pin: string
+          pin?: string | null
           full_name?: string | null
           role?: string
           is_admin?: boolean
@@ -29,7 +29,7 @@ export interface Database {
         Update: {
           id?: string
           username?: string
-          pin?: string
+          pin?: string | null
           full_name?: string | null
           role?: string
           is_admin?: boolean
@@ -93,6 +93,7 @@ export interface Database {
           user_id: string
           report_date: string
           week_start_date: string
+          week_end_date: string | null
           status: string
           blockers: string | null
           tomorrow_plan: string | null
@@ -105,6 +106,7 @@ export interface Database {
           user_id: string
           report_date: string
           week_start_date: string
+          week_end_date?: string | null
           status?: string
           blockers?: string | null
           tomorrow_plan?: string | null
@@ -117,6 +119,7 @@ export interface Database {
           user_id?: string
           report_date?: string
           week_start_date?: string
+          week_end_date?: string | null
           status?: string
           blockers?: string | null
           tomorrow_plan?: string | null
@@ -129,27 +132,27 @@ export interface Database {
         Row: {
           id: string
           report_id: string
-          category_id: string
           activity_id: string
-          time_spent: number | null
+          day_of_week: number
+          hours_spent: number | null
           notes: string | null
           created_at: string
         }
         Insert: {
           id?: string
           report_id: string
-          category_id: string
           activity_id: string
-          time_spent?: number | null
+          day_of_week: number
+          hours_spent?: number | null
           notes?: string | null
           created_at?: string
         }
         Update: {
           id?: string
           report_id?: string
-          category_id?: string
           activity_id?: string
-          time_spent?: number | null
+          day_of_week?: number
+          hours_spent?: number | null
           notes?: string | null
           created_at?: string
         }

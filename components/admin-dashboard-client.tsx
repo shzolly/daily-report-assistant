@@ -22,9 +22,8 @@ import { Switch } from "@/components/ui/switch"
 import { useToast } from "@/hooks/use-toast"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
-import { Users, FileText, FolderTree, Activity, Edit, Trash2, Plus, ArrowLeft, Eye, LogOut } from "lucide-react"
+import { Users, FileText, FolderTree, Activity, Edit, Trash2, Plus, ArrowLeft, Eye, Link2 } from "lucide-react"
 import type { Database } from "@/types/database"
-import { logoutAction } from "@/app/actions/auth"
 
 type User = Database["public"]["Tables"]["users"]["Row"]
 type Category = Database["public"]["Tables"]["categories"]["Row"] & {
@@ -55,7 +54,6 @@ export default function AdminDashboardClient({ currentUser, users, categories, r
   // User form state
   const [userForm, setUserForm] = useState({
     username: "",
-    pin: "",
     full_name: "",
     role: "user",
     is_active: true,
@@ -84,13 +82,16 @@ export default function AdminDashboardClient({ currentUser, users, categories, r
       const { role, ...rest } = userForm
       const userData = {
         ...rest,
+        username: rest.username.trim().toLowerCase(),
+        full_name: rest.full_name.trim(),
         is_admin: role === "admin",
+        role,
       }
       
       if (dialogMode === "add") {
         const { error } = await supabase.from("users").insert([userData])
         if (error) throw error
-        toast({ title: "User created", description: "User has been created successfully." })
+        toast({ title: "User created", description: `Access URL: /${userData.username}` })
       } else {
         if (!selectedItemId) throw new Error("No user selected")
         const { error } = await supabase.from("users").update(userData).eq("id", selectedItemId)
@@ -222,7 +223,6 @@ export default function AdminDashboardClient({ currentUser, users, categories, r
     if (mode === "edit" && user) {
       setUserForm({
         username: user.username,
-        pin: user.pin,
         full_name: user.full_name || "",
         role: user.role || "user",
         is_active: user.is_active ?? true,
@@ -230,7 +230,6 @@ export default function AdminDashboardClient({ currentUser, users, categories, r
     } else {
       setUserForm({
         username: "",
-        pin: "",
         full_name: "",
         role: "user",
         is_active: true,
@@ -287,27 +286,20 @@ export default function AdminDashboardClient({ currentUser, users, categories, r
     setSelectedItemId(null)
   }
 
-  async function handleLogout() {
-    await logoutAction()
-  }
-
   return (
-    <div className="min-h-screen bg-neutral-50">
+    <div className="admin-shell min-h-screen">
       {/* Header */}
-      <div className="border-b bg-white">
+      <div className="border-b border-slate-200/80 bg-white/85 shadow-sm backdrop-blur-xl sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 max-w-7xl">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold">Admin Dashboard</h1>
-              <p className="text-sm text-muted-foreground">Manage users, reports, categories, and activities</p>
+              <h1 className="text-2xl font-bold text-slate-950">Admin Dashboard</h1>
+              <p className="text-sm text-slate-500">Manage personalized URLs, reports, categories, and activities</p>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="outline" onClick={() => router.push("/dashboard")}>
+              <Button variant="outline" onClick={() => router.push(`/${currentUser.username}`)}>
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back to Dashboard
-              </Button>
-              <Button variant="ghost" size="icon" onClick={handleLogout} className="text-slate-600 hover:text-red-600 hover:bg-red-50">
-                <LogOut className="h-4 w-4" />
               </Button>
             </div>
           </div>
@@ -387,9 +379,10 @@ export default function AdminDashboardClient({ currentUser, users, categories, r
                     <TableRow>
                       <TableHead>Username</TableHead>
                       <TableHead>Full Name</TableHead>
+                      <TableHead>Access URL</TableHead>
                       <TableHead>Role</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead>Last Login</TableHead>
+                      <TableHead>Created</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -399,6 +392,15 @@ export default function AdminDashboardClient({ currentUser, users, categories, r
                         <TableCell className="font-medium">{user.username}</TableCell>
                         <TableCell>{user.full_name}</TableCell>
                         <TableCell>
+                          <a
+                            href={`/${user.username}`}
+                            className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-xs font-medium text-teal-700 hover:bg-teal-50 hover:text-teal-800"
+                          >
+                            <Link2 className="h-3 w-3" />
+                            /{user.username}
+                          </a>
+                        </TableCell>
+                        <TableCell>
                           <Badge variant={user.role === "admin" ? "default" : "secondary"}>{user.role}</Badge>
                         </TableCell>
                         <TableCell>
@@ -407,7 +409,7 @@ export default function AdminDashboardClient({ currentUser, users, categories, r
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          {user.last_login ? new Date(user.last_login).toLocaleDateString() : "Never"}
+                          {new Date(user.created_at).toLocaleDateString()}
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
@@ -639,7 +641,9 @@ export default function AdminDashboardClient({ currentUser, users, categories, r
           <DialogHeader>
             <DialogTitle>{dialogMode === "add" ? "Add New User" : "Edit User"}</DialogTitle>
             <DialogDescription>
-              {dialogMode === "add" ? "Create a new user account" : "Update user information"}
+              {dialogMode === "add"
+                ? "Create a personalized dashboard URL for a new user"
+                : "Update user information and access"}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -647,19 +651,13 @@ export default function AdminDashboardClient({ currentUser, users, categories, r
               <Label htmlFor="username">Username</Label>
               <Input
                 id="username"
+                placeholder="john"
                 value={userForm.username}
                 onChange={(e) => setUserForm({ ...userForm, username: e.target.value })}
               />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="pin">PIN</Label>
-              <Input
-                id="pin"
-                type="password"
-                value={userForm.pin}
-                onChange={(e) => setUserForm({ ...userForm, pin: e.target.value })}
-                maxLength={6}
-              />
+              <p className="text-xs text-muted-foreground">
+                Access URL: /{userForm.username.trim().toLowerCase() || "username"}
+              </p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="full_name">Full Name</Label>

@@ -12,7 +12,6 @@ import { Badge } from "@/components/ui/badge"
 import {
   Sparkles,
   Save,
-  LogOut,
   Calendar,
   Clock,
   ChevronLeft,
@@ -26,7 +25,6 @@ import {
 import { useToast } from "@/hooks/use-toast"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
-import { logoutAction } from "@/app/actions/auth"
 import type { Database } from "@/types/database"
 
 type User = Database["public"]["Tables"]["users"]["Row"]
@@ -101,6 +99,16 @@ export default function DashboardClient({ user, categories }: DashboardClientPro
   useEffect(() => {
     loadWeekReports()
   }, [currentWeekStart])
+
+  useEffect(() => {
+    fetch("/api/url-session", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: user.id }),
+    }).catch(() => {
+      // The dashboard still works from the URL; the cookie is only for session continuity.
+    })
+  }, [user.id])
 
   async function loadWeekReports() {
     const weekStart = formatDate(currentWeekStart)
@@ -347,8 +355,13 @@ export default function DashboardClient({ user, categories }: DashboardClientPro
     })
   }
 
-  async function handleLogout() {
-    await logoutAction()
+  async function openAdminDashboard() {
+    await fetch("/api/url-session", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: user.id }),
+    }).catch(() => {})
+    router.push(`/admin?user=${encodeURIComponent(user.username)}`)
   }
 
   function navigateWeek(direction: "prev" | "next") {
@@ -362,13 +375,18 @@ export default function DashboardClient({ user, categories }: DashboardClientPro
   const hasReport = currentDayReport.generatedReport.length > 0
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <header className="bg-white border-b shadow-sm sticky top-0 z-50">
+    <div className="app-shell min-h-screen">
+      <header className="bg-white/85 border-b border-slate-200/80 shadow-sm backdrop-blur-xl sticky top-0 z-50">
         <div className="container mx-auto px-4 py-3 max-w-7xl">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Sparkles className="h-6 w-6 text-purple-600" />
-              <h1 className="text-lg font-semibold text-slate-900">Daily Report Assistant Dashboard</h1>
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-teal-600 text-white shadow-sm">
+                <Sparkles className="h-5 w-5" />
+              </div>
+              <div>
+                <h1 className="text-lg font-semibold text-slate-950">Daily Report Assistant</h1>
+                <p className="text-xs text-slate-500">/{user.username}</p>
+              </div>
             </div>
             <div className="flex items-center gap-3">
               <span className="text-sm text-slate-600">
@@ -376,12 +394,12 @@ export default function DashboardClient({ user, categories }: DashboardClientPro
               </span>
               <div className="h-6 w-px bg-slate-200" />
               <div className="flex items-center gap-1">
-                {user.role === "admin" && (
+                {user.is_admin && (
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => router.push("/admin")}
-                    className="text-slate-600 hover:text-purple-600 hover:bg-purple-50"
+                    onClick={openAdminDashboard}
+                    className="text-slate-600 hover:text-teal-700 hover:bg-teal-50"
                   >
                     Admin
                   </Button>
@@ -390,17 +408,9 @@ export default function DashboardClient({ user, categories }: DashboardClientPro
                   variant="ghost"
                   size="sm"
                   onClick={() => router.push("/")}
-                  className="text-slate-600 hover:text-purple-600 hover:bg-purple-50"
+                  className="text-slate-600 hover:text-teal-700 hover:bg-teal-50"
                 >
                   Home
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleLogout}
-                  className="text-slate-600 hover:text-red-600 hover:bg-red-50"
-                >
-                  <LogOut className="h-4 w-4" />
                 </Button>
               </div>
             </div>
@@ -420,13 +430,13 @@ export default function DashboardClient({ user, categories }: DashboardClientPro
             Previous Week
           </Button>
           <div className="flex items-center gap-3">
-            <Calendar className="h-5 w-5 text-purple-600" />
+            <Calendar className="h-5 w-5 text-teal-600" />
             <span className="font-semibold text-slate-800 text-lg">
               {weekDays[0].toLocaleDateString("en-US", { month: "short", day: "numeric" })} -{" "}
               {weekDays[4].toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
             </span>
             {isCurrentWeek && (
-              <Badge className="bg-purple-100 text-purple-700 border-purple-200">
+              <Badge className="bg-teal-100 text-teal-700 border-teal-200">
                 This Week
               </Badge>
             )}
@@ -454,8 +464,8 @@ export default function DashboardClient({ user, categories }: DashboardClientPro
                   value={dateStr}
                   className={`relative rounded-md py-2.5 h-auto transition-all ${
                     isSelected
-                      ? "bg-purple-600 shadow-md ring-2 ring-purple-300 ring-offset-2 data-[state=active]:shadow-md data-[state=active]:bg-purple-600"
-                      : "hover:bg-purple-50 hover:ring-1 hover:ring-purple-200 data-[state=active]:shadow-none"
+                      ? "bg-teal-600 shadow-md ring-2 ring-teal-200 ring-offset-2 data-[state=active]:shadow-md data-[state=active]:bg-teal-600"
+                      : "hover:bg-teal-50 hover:ring-1 hover:ring-teal-200 data-[state=active]:shadow-none"
                   }`}
                 >
                   <div className="flex flex-col items-center gap-1">
@@ -630,7 +640,7 @@ export default function DashboardClient({ user, categories }: DashboardClientPro
                         <Button
                           onClick={generateReport}
                           disabled={isGenerating || report?.activities.length === 0}
-                          className="flex-1 bg-purple-600 hover:bg-purple-700"
+                          className="flex-1 bg-teal-600 hover:bg-teal-700"
                         >
                           <Sparkles className="mr-2 h-4 w-4" />
                           {isGenerating ? "Generating..." : "Generate Report"}
@@ -648,7 +658,7 @@ export default function DashboardClient({ user, categories }: DashboardClientPro
                       <CardHeader className="pb-3">
                         <div className="flex items-center justify-between">
                           <CardTitle className="text-lg flex items-center gap-2">
-                            <FileText className="h-5 w-5 text-purple-500" />
+                            <FileText className="h-5 w-5 text-teal-600" />
                             Generated Report
                           </CardTitle>
                           <div className="flex items-center gap-2">

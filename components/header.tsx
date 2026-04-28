@@ -1,8 +1,7 @@
 "use client"
 
-import { logoutAction } from "@/app/actions/auth"
 import { Button } from "@/components/ui/button"
-import { LogOut, Calendar, Settings } from "lucide-react"
+import { Calendar, Settings } from "lucide-react"
 import { useRouter } from "next/navigation"
 
 type HeaderProps = {
@@ -14,10 +13,6 @@ type HeaderProps = {
 
 export function Header({ user }: HeaderProps) {
   const router = useRouter()
-
-  const handleLogout = async () => {
-    await logoutAction()
-  }
 
   return (
     <header className="border-b bg-white">
@@ -35,15 +30,11 @@ export function Header({ user }: HeaderProps) {
             )}
           </div>
           {user.is_admin && (
-            <Button variant="outline" size="sm" onClick={() => router.push("/admin")}>
+            <Button variant="outline" size="sm" onClick={() => router.push(`/admin?user=${encodeURIComponent(user.username)}`)}>
               <Settings className="h-4 w-4 mr-2" />
               Admin
             </Button>
           )}
-          <Button variant="outline" size="sm" onClick={handleLogout}>
-            <LogOut className="h-4 w-4 mr-2" />
-            Logout
-          </Button>
         </div>
       </div>
     </header>

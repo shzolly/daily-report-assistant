@@ -1,9 +1,22 @@
-import { requireAdmin } from "@/lib/auth"
+import { getCurrentUser, getUserByUsername } from "@/lib/auth"
 import { createClient } from "@/lib/supabase/server"
+import { redirect } from "next/navigation"
 import AdminDashboardClient from "@/components/admin-dashboard-client"
 
-export default async function AdminPage() {
-  const currentUser = await requireAdmin()
+type AdminPageProps = {
+  searchParams: Promise<{
+    user?: string
+  }>
+}
+
+export default async function AdminPage({ searchParams }: AdminPageProps) {
+  const { user: username } = await searchParams
+  const currentUser = username ? await getUserByUsername(username) : await getCurrentUser()
+
+  if (!currentUser?.is_admin || !currentUser.is_active) {
+    redirect("/demo")
+  }
+  const activeAdmin = currentUser!
 
   const supabase = await createClient()
 
@@ -29,7 +42,7 @@ export default async function AdminPage() {
 
   return (
     <AdminDashboardClient
-      currentUser={currentUser}
+      currentUser={activeAdmin}
       users={users || []}
       categories={categories || []}
       reports={reports || []}

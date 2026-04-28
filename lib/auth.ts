@@ -4,7 +4,7 @@ import { cookies } from "next/headers"
 type User = {
   id: string
   username: string
-  pin: string
+  pin: string | null
   full_name: string | null
   role: string
   is_admin: boolean
@@ -27,6 +27,22 @@ export async function getCurrentUser(): Promise<User | null> {
     .from("users")
     .select("*")
     .eq("id", userId)
+    .single()
+
+  if (error || !user) {
+    return null
+  }
+
+  return user as User
+}
+
+export async function getUserByUsername(username: string): Promise<User | null> {
+  const supabase = await createClient()
+
+  const { data: user, error } = await supabase
+    .from("users")
+    .select("*")
+    .eq("username", username.toLowerCase())
     .single()
 
   if (error || !user) {
