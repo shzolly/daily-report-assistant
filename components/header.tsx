@@ -30,7 +30,7 @@ export function Header({ user }: HeaderProps) {
             )}
           </div>
           {user.is_admin && (
-            <Button variant="outline" size="sm" onClick={() => router.push(`/admin?user=${encodeURIComponent(user.username)}`)}>
+            <Button variant="outline" size="sm" onClick={() => router.push(`/admin-dashboard?user=${encodeURIComponent(user.username)}`)}>
               <Settings className="h-4 w-4 mr-2" />
               Admin
             </Button>

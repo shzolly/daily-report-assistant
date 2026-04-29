@@ -63,6 +63,7 @@ export default function DashboardClient({ user, categories }: DashboardClientPro
   const [isGenerating, setIsGenerating] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [sessionReady, setSessionReady] = useState(false)
 
   function getMonday(date: Date): Date {
     const d = new Date(date)
@@ -97,18 +98,35 @@ export default function DashboardClient({ user, categories }: DashboardClientPro
   const isCurrentWeek = formatDate(getMonday(new Date())) === formatDate(currentWeekStart)
 
   useEffect(() => {
-    loadWeekReports()
-  }, [currentWeekStart])
+    let isMounted = true
+
+    async function syncUrlSession() {
+      setSessionReady(false)
+      try {
+        await fetch("/api/url-session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: user.id }),
+        })
+      } finally {
+        if (isMounted) {
+          setSessionReady(true)
+        }
+      }
+    }
+
+    syncUrlSession()
+
+    return () => {
+      isMounted = false
+    }
+  }, [user.id])
 
   useEffect(() => {
-    fetch("/api/url-session", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId: user.id }),
-    }).catch(() => {
-      // The dashboard still works from the URL; the cookie is only for session continuity.
-    })
-  }, [user.id])
+    if (sessionReady) {
+      loadWeekReports()
+    }
+  }, [currentWeekStart, sessionReady, user.id])
 
   async function loadWeekReports() {
     const weekStart = formatDate(currentWeekStart)
@@ -128,15 +146,26 @@ export default function DashboardClient({ user, categories }: DashboardClientPro
 
     const reportsData: Record<string, DayReport> = {}
 
-    weekDays.forEach((day) => {
+    weekDays.forEach((day, dayIndex) => {
       const dateStr = formatDate(day)
-      const report = reports?.find((r) => r.report_date === dateStr)
+      const dayOfWeek = dayIndex + 1
+      const dailyReport = reports?.find((r) => r.report_date === dateStr)
+      const legacyWeeklyReport = reports?.find(
+        (r) =>
+          !r.report_date &&
+          (r.report_activities || []).some((ra: any) => Number(ra.day_of_week) === dayOfWeek),
+      )
+      const report = dailyReport || legacyWeeklyReport
+      const reportActivities = (report?.report_activities || []).filter((ra: any) => {
+        if (!ra.day_of_week) return true
+        return Number(ra.day_of_week) === dayOfWeek
+      })
 
       reportsData[dateStr] = {
         date: dateStr,
         dayName: getFullDayName(day),
         activities:
-          (report?.report_activities || []).map((ra: any) => {
+          reportActivities.map((ra: any) => {
             const activity = categories.find(cat => 
               cat.activities.some(act => act.id === ra.activity_id)
             )
@@ -361,7 +390,7 @@ export default function DashboardClient({ user, categories }: DashboardClientPro
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ userId: user.id }),
     }).catch(() => {})
-    router.push(`/admin?user=${encodeURIComponent(user.username)}`)
+    router.push(`/admin-dashboard?user=${encodeURIComponent(user.username)}`)
   }
 
   function navigateWeek(direction: "prev" | "next") {
