@@ -168,10 +168,9 @@ export default function DashboardClient({ user, categories }: DashboardClientPro
           (r.report_activities || []).some((ra: any) => Number(ra.day_of_week) === dayOfWeek),
       )
       const report = dailyReport || legacyWeeklyReport
-      const reportActivities = (report?.report_activities || []).filter((ra: any) => {
-        if (!ra.day_of_week) return true
-        return Number(ra.day_of_week) === dayOfWeek
-      })
+      const reportActivities = dailyReport
+        ? dailyReport.report_activities || []
+        : (legacyWeeklyReport?.report_activities || []).filter((ra: any) => Number(ra.day_of_week) === dayOfWeek)
 
       reportsData[dateStr] = {
         date: dateStr,
