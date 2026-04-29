@@ -216,6 +216,24 @@ export default function AdminDashboardClient({ currentUser, users, categories, r
     }
   }
 
+  async function handleReportDelete(reportId: string) {
+    if (!confirm("Are you sure you want to delete this report?")) return
+
+    try {
+      await supabase.from("report_activities").delete().eq("report_id", reportId)
+      const { error } = await supabase.from("reports").delete().eq("id", reportId)
+      if (error) throw error
+      toast({ title: "Report deleted", description: "The report has been deleted successfully." })
+      router.refresh()
+    } catch (error) {
+      toast({
+        title: "Delete failed",
+        description: error instanceof Error ? error.message : "An error occurred",
+        variant: "destructive",
+      })
+    }
+  }
+
   function openUserDialog(mode: "add" | "edit", user?: User) {
     setDialogMode(mode)
     setDialogType("user")
@@ -449,9 +467,12 @@ export default function AdminDashboardClient({ currentUser, users, categories, r
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {reports.map((report) => (
+                    {reports.map((report) => {
+                      const reportDate = report.report_date || report.week_start_date
+
+                      return (
                       <TableRow key={report.id}>
-                        <TableCell>{new Date(report.report_date).toLocaleDateString()}</TableCell>
+                        <TableCell>{new Date(reportDate).toLocaleDateString()}</TableCell>
                         <TableCell>
                           {report.users?.full_name || report.users?.username || "Unknown"}
                         </TableCell>
@@ -463,48 +484,54 @@ export default function AdminDashboardClient({ currentUser, users, categories, r
                         </TableCell>
                         <TableCell>{new Date(report.updated_at).toLocaleDateString()}</TableCell>
                         <TableCell className="text-right">
-                          <Dialog>
-                            <DialogTrigger asChild>
-                              <Button variant="outline" size="sm">
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-2xl">
-                              <DialogHeader>
-                                <DialogTitle>Report Details</DialogTitle>
-                                <DialogDescription>
-                                  {report.users?.full_name || report.users?.username || "Unknown"} - {new Date(report.report_date).toLocaleDateString()}
-                                </DialogDescription>
-                              </DialogHeader>
-                              <div className="space-y-4">
-                                {report.blockers && (
-                                  <div>
-                                    <Label className="font-semibold">Blockers/Risks:</Label>
-                                    <p className="text-sm mt-1">{report.blockers}</p>
-                                  </div>
-                                )}
-                                {report.tomorrow_plan && (
-                                  <div>
-                                    <Label className="font-semibold">Tomorrow's Plan:</Label>
-                                    <p className="text-sm mt-1">{report.tomorrow_plan}</p>
-                                  </div>
-                                )}
-                                {report.generated_report && (
-                                  <div>
-                                    <Label className="font-semibold">Generated Report:</Label>
-                                    <Textarea
-                                      value={report.generated_report}
-                                      readOnly
-                                      className="mt-1 min-h-[300px] font-mono text-sm"
-                                    />
-                                  </div>
-                                )}
-                              </div>
-                            </DialogContent>
-                          </Dialog>
+                          <div className="flex justify-end gap-2">
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <Button variant="outline" size="sm">
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent className="max-w-2xl">
+                                <DialogHeader>
+                                  <DialogTitle>Report Details</DialogTitle>
+                                  <DialogDescription>
+                                    {report.users?.full_name || report.users?.username || "Unknown"} - {new Date(reportDate).toLocaleDateString()}
+                                  </DialogDescription>
+                                </DialogHeader>
+                                <div className="space-y-4">
+                                  {report.blockers && (
+                                    <div>
+                                      <Label className="font-semibold">Blockers/Risks:</Label>
+                                      <p className="text-sm mt-1">{report.blockers}</p>
+                                    </div>
+                                  )}
+                                  {report.tomorrow_plan && (
+                                    <div>
+                                      <Label className="font-semibold">Tomorrow's Plan:</Label>
+                                      <p className="text-sm mt-1">{report.tomorrow_plan}</p>
+                                    </div>
+                                  )}
+                                  {report.generated_report && (
+                                    <div>
+                                      <Label className="font-semibold">Generated Report:</Label>
+                                      <Textarea
+                                        value={report.generated_report}
+                                        readOnly
+                                        className="mt-1 min-h-[300px] font-mono text-sm"
+                                      />
+                                    </div>
+                                  )}
+                                </div>
+                              </DialogContent>
+                            </Dialog>
+                            <Button variant="destructive" size="sm" onClick={() => handleReportDelete(report.id)}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
-                    ))}
+                      )
+                    })}
                   </TableBody>
                 </Table>
               </CardContent>

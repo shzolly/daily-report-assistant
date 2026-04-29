@@ -130,17 +130,29 @@ export default function DashboardClient({ user, categories }: DashboardClientPro
 
   async function loadWeekReports() {
     const weekStart = formatDate(currentWeekStart)
+    const weekEnd = formatDate(new Date(currentWeekStart.getTime() + 4 * 24 * 60 * 60 * 1000))
     console.log("Loading reports for week:", weekStart)
 
-    const { data: reports, error: reportsError } = await supabase
+    const { data: reportsByDate, error: reportsByDateError } = await supabase
+      .from("reports")
+      .select("*, report_activities(*)")
+      .eq("user_id", user.id)
+      .gte("report_date", weekStart)
+      .lte("report_date", weekEnd)
+
+    const { data: reportsByWeekStart, error: reportsByWeekStartError } = await supabase
       .from("reports")
       .select("*, report_activities(*)")
       .eq("user_id", user.id)
       .eq("week_start_date", weekStart)
 
-    if (reportsError) {
-      console.error("Error loading reports:", reportsError)
+    if (reportsByDateError || reportsByWeekStartError) {
+      console.error("Error loading reports:", reportsByDateError || reportsByWeekStartError)
     }
+
+    const reports = [...(reportsByDate || []), ...(reportsByWeekStart || [])].filter(
+      (report, index, allReports) => allReports.findIndex((item) => item.id === report.id) === index,
+    )
 
     console.log("Loaded reports:", reports)
 

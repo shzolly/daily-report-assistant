@@ -91,7 +91,7 @@ export interface Database {
         Row: {
           id: string
           user_id: string
-          report_date: string
+          report_date: string | null
           week_start_date: string
           week_end_date: string | null
           status: string
@@ -104,7 +104,7 @@ export interface Database {
         Insert: {
           id?: string
           user_id: string
-          report_date: string
+          report_date?: string | null
           week_start_date: string
           week_end_date?: string | null
           status?: string
@@ -117,7 +117,7 @@ export interface Database {
         Update: {
           id?: string
           user_id?: string
-          report_date?: string
+          report_date?: string | null
           week_start_date?: string
           week_end_date?: string | null
           status?: string
