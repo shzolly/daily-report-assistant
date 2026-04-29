@@ -1,228 +1,163 @@
 # Daily Report Assistant
 
-A modern, AI-powered web application that helps teams generate professional daily reports effortlessly. Built with zero human code using OpenCode and Antigravity Auth.
+Daily Report Assistant is a Next.js app for collecting daily work activity and turning it into polished, manager-ready reports with Google Gemini. The current access model is URL-based: each user has a personalized workspace route such as `/demo`, `/lei`, or `/admin`.
 
-## Introduction
+## What Changed Recently
 
-Daily Report Assistant streamlines the process of creating daily work reports for software development teams. By leveraging AI technology, it transforms selected activities and notes into polished, manager-ready reports. The application features a clean, intuitive interface with week-based navigation, making it easy to track work across multiple days and generate comprehensive reports.
+- Removed the login/signup/PIN flow.
+- Added personalized dashboard URLs at `/{username}`.
+- Added a friendly missing-workspace screen for invalid URLs.
+- Admin users still land on their own Daily Report dashboard by default.
+- Admin management moved to `/admin-dashboard`.
+- The homepage demo button now opens `/demo`.
+- Updated the UI toward a cleaner modern productivity style.
+- Added backward-compatible loading for older weekly report records that use `day_of_week`.
 
 ## Key Features
 
-### For Users
+### User Dashboards
 
-- **AI-Powered Report Generation**: Automatically generate professional daily reports using Google Gemini AI based on selected activities and notes
-- **Week-Based Navigation**: Navigate through weeks and view reports for each workday (Monday-Friday)
-- **Activity Selection**: Select from predefined categories and activities with time tracking
-- **Time Tracking**: Log hours spent on each activity for better time management
-- **Custom Notes**: Add detailed notes to activities, blockers/risks, and tomorrow's plans
-- **Report Editing**: Edit AI-generated reports before saving
-- **Copy to Clipboard**: Quickly copy generated reports for sharing
-- **Report History**: View and edit previous reports from past weeks
-- **Secure PIN Authentication**: Simple and secure login using username and PIN
+- Personalized URL access, for example `/demo` or `/lei`
+- Monday-Friday weekly navigation
+- Activity selection by category
+- Per-activity time tracking and notes
+- Blockers/risks and tomorrow-plan fields
+- AI-generated single-paragraph daily reports
+- Editable generated reports
+- Copy-to-clipboard support
+- Friendly screen when a username does not exist or is inactive
 
-### For Administrators
+### Admin Dashboard
 
-- **User Management**: Create, edit, and manage user accounts with role-based access control
-- **Activity Categories**: Organize activities into categories for better structure
-- **Activity Management**: Add, edit, and manage individual activities within categories
-- **Report Overview**: View all user reports with detailed insights
-- **Status Tracking**: Monitor active/inactive users, categories, and activities
-- **Dashboard Analytics**: View statistics including total users, reports, categories, and activities
+Admin users access their normal report dashboard at their username URL. For example, if the admin username is `admin`, `/admin` opens that admin user's Daily Report dashboard.
 
-## Functionalities
+Admin management lives at:
 
-### Authentication System
-- PIN-based login for quick and secure access
-- User signup with username, full name, and PIN
-- Role-based access control (Admin/User)
-- Secure session management with Supabase authentication
-
-### Dashboard
-- Week-based calendar view with day-by-day navigation
-- Visual indicators for completed reports and current day
-- Activity selection with checkboxes
-- Time tracking input for each activity
-- Notes fields for activities, blockers, and tomorrow's plans
-- Real-time report preview
-- Save and generate functionality
-
-### AI Report Generation
-- Integrates with Google Gemini 3 Flash (free tier)
-- Generates concise, single-paragraph professional reports
-- Includes all selected activities with notes and time spent
-- Incorporates blockers/risks and tomorrow's plans
-- Professional tone suitable for manager review
-
-### Admin Panel
-- **Users Tab**: Complete user account management
-  - Create new users with username, PIN, full name, and role
-  - Edit existing users
-  - Activate/deactivate user accounts
-  - Track last login times
-  
-- **Reports Tab**: Report monitoring
-  - View all user reports across the organization
-  - Filter by date, user, and status
-  - Preview full report details
-  - Track report completion status
-  
-- **Categories Tab**: Category management
-  - Create and organize activity categories
-  - Edit category names and descriptions
-  - View activity counts per category
-  - Enable/disable categories
-  
-- **Activities Tab**: Activity management
-  - Add activities to specific categories
-  - Edit activity details
-  - Track activity usage
-  - Enable/disable activities
-
-### Database Management
-- Persistent storage with Supabase (PostgreSQL)
-- Automatic data synchronization
-- Weekly report organization
-- Activity tracking with hours and notes
-- User session management
-
-## Technical Stack
-
-### Frontend
-- **Framework**: Next.js 16.0.10 (React 19.2.0)
-- **Language**: TypeScript 5
-- **Styling**: Tailwind CSS 4.1.9 with custom animations
-- **UI Components**: 
-  - Radix UI primitives for accessible components
-  - Custom component library with shadcn/ui patterns
-  - Lucide React for icons
-- **State Management**: React hooks (useState, useEffect)
-- **Form Handling**: React Hook Form with Zod validation
-- **Notifications**: Sonner for toast notifications
-- **Date Handling**: date-fns 4.1.0
-
-### Backend
-- **Runtime**: Node.js
-- **API Routes**: Next.js API routes (App Router)
-- **AI Integration**: Google Gemini AI (@google/genai 1.37.0)
-  - Model: gemini-3-flash-preview
-  - Temperature: 0.7
-  - Max tokens: 1500
-
-### Database & Authentication
-- **Database**: Supabase (PostgreSQL)
-- **Authentication**: Supabase Auth with custom PIN-based login
-- **Session Management**: @supabase/ssr 0.8.0
-- **Real-time Updates**: Supabase real-time subscriptions
-
-### Data Models
-- **Users**: username, PIN, full_name, role, is_active, last_login
-- **Categories**: name, description, is_active
-- **Activities**: name, description, category_id, is_active
-- **Reports**: user_id, report_date, week_start_date, week_end_date, blockers, tomorrow_plan, generated_report, status
-- **Report Activities**: report_id, activity_id, notes, hours_spent, day_of_week
-
-### Development Tools
-- **Package Manager**: npm
-- **Linting**: ESLint
-- **CSS Processing**: PostCSS, Autoprefixer
-- **Build System**: Next.js build system with Turbopack
-
-### Deployment & Analytics
-- **Hosting**: Vercel-ready configuration
-- **Analytics**: @vercel/analytics 1.3.1
-
-## Project Structure
-
-```
-daily-report-assistant/
-├── app/
-│   ├── actions/          # Server actions (auth)
-│   ├── admin/            # Admin dashboard pages
-│   ├── api/              # API routes (login, signup, generate-report)
-│   ├── dashboard/        # User dashboard pages
-│   ├── login/            # Login page
-│   ├── signup/           # Signup page
-│   └── layout.tsx        # Root layout
-├── components/
-│   ├── ui/               # Reusable UI components
-│   ├── admin-dashboard-client.tsx
-│   ├── dashboard-client.tsx
-│   ├── header.tsx
-│   └── theme-provider.tsx
-├── lib/
-│   ├── supabase/         # Supabase client and server utilities
-│   ├── auth.ts           # Authentication utilities
-│   └── utils.ts          # Helper functions
-├── hooks/                # Custom React hooks
-├── types/                # TypeScript type definitions
-└── public/               # Static assets
+```text
+/admin-dashboard?user=admin
 ```
 
-## Getting Started
+From there, admins can:
 
-### Prerequisites
-- Node.js 18+ installed
-- Supabase account and project
-- Google Gemini API key
+- Create users and assign roles
+- See each user's personalized access URL
+- Activate or deactivate users
+- Manage activity categories
+- Manage activities
+- View submitted reports
 
-### Installation
+## Routes
 
-1. Clone the repository:
-```bash
-git clone https://github.com/yourusername/daily-report-assistant.git
-cd daily-report-assistant
+| Route | Purpose |
+| --- | --- |
+| `/` | Landing page |
+| `/demo` | Demo user's Daily Report dashboard |
+| `/{username}` | Personalized user dashboard |
+| `/admin` | Admin user's own Daily Report dashboard, when `admin` is a valid active user |
+| `/admin-dashboard?user={adminUsername}` | Admin management dashboard |
+| `/dashboard` | Redirects to `/demo` |
+| `/login` | Redirects to `/demo` |
+| `/signup` | Redirects to `/demo` |
+
+## Tech Stack
+
+- Next.js 16
+- React 19
+- TypeScript
+- Tailwind CSS 4
+- Radix UI and shadcn-style UI components
+- Supabase PostgreSQL
+- Google Gemini via `@google/genai`
+- Vercel Analytics
+
+## Data Model
+
+The app uses these main tables:
+
+- `users`: username, full name, role/admin status, active status
+- `categories`: activity category definitions
+- `activities`: activities assigned to categories
+- `reports`: daily or legacy weekly report records
+- `report_activities`: selected activities, notes, hours, and day-of-week metadata
+
+The legacy `pin` column may still exist in older databases, but it is no longer used for access.
+
+## Database Setup
+
+Run the SQL scripts in `scripts/` in order when setting up a fresh Supabase database. For existing installs that are moving from PIN access to URL access, make sure to run:
+
+```text
+scripts/011_url_based_access.sql
 ```
 
-2. Install dependencies:
-```bash
-npm install
-```
+That migration makes the legacy `pin` field nullable and documents the new URL-based username behavior.
 
-3. Set up environment variables:
-Create a `.env.local` file in the root directory:
+You should create at least:
+
+- A `demo` user for the homepage demo button
+- An `admin` user with `is_admin = true` if you want `/admin` to open the admin user's dashboard
+
+## Environment Variables
+
+Create `.env.local`:
+
 ```env
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 GEMINI_API_KEY=your_gemini_api_key
 ```
 
-4. Run the development server:
-```bash
-npm run dev
-```
+## Development
 
-5. Open [http://localhost:3000](http://localhost:3000) in your browser
-
-### Build for Production
+Install dependencies:
 
 ```bash
-npm run build
-npm start
+pnpm install
 ```
 
-## Environment Variables
+Start the dev server:
 
-- `NEXT_PUBLIC_SUPABASE_URL`: Your Supabase project URL
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Your Supabase anonymous key
-- `GEMINI_API_KEY`: Your Google Gemini API key
+```bash
+pnpm dev
+```
 
-## Features Highlights
+Open:
 
-- Zero human code - 100% AI-generated using OpenCode + Antigravity Auth
-- Powered by Google Gemini 3 Flash free tier
-- Fully responsive design with modern UI
-- Real-time data synchronization
-- Secure authentication and authorization
-- Comprehensive admin controls
-- Professional report generation
+```text
+http://localhost:3000
+```
 
-## License
+Build:
 
-This project is licensed under the MIT License.
+```bash
+pnpm build
+```
 
-## Acknowledgments
+Typecheck:
 
-- Built with [OpenCode](https://opencode.ai)
-- Powered by [Google Gemini AI](https://ai.google.dev)
-- Database and Auth by [Supabase](https://supabase.com)
-- UI Components by [Radix UI](https://www.radix-ui.com)
+```bash
+pnpm typecheck
+```
+
+The project scripts use webpack for Next.js commands:
+
+```json
+"dev": "next dev --webpack",
+"build": "next build --webpack"
+```
+
+This avoids Turbopack process-spawn issues seen in some Windows environments and remains compatible with Vercel.
+
+## Deployment
+
+The app is Vercel-ready. Set the environment variables in Vercel, connect the GitHub repository, and use the default build command:
+
+```bash
+pnpm run build
+```
+
+## Notes
+
+- User access is intentionally simple: the username in the URL is the workspace selector.
+- Admin management requires an active admin user and should be opened with `?user={adminUsername}`.
+- Invalid usernames do not show the default Next.js 404; they render a user-friendly workspace-not-found screen.
